@@ -3,10 +3,10 @@ import os
 import requests
 
 SPOTIFY_GET_CURRENT_TRACK_URL = 'https://api.spotify.com/v1/me/player'
-SPOTIFY_ACCESS_TOKEN = 'BQCv9WNWYHdnoesltItF6EKWmzJZhAALLAN7T2livcj1kcyQR0Qt9vDO882c5Cy5DmTu5OF6OjHQle7A8bok1adTkdHwIrj0SNNwrQ-Pp8oD4Gxcrwk46hj-9RwLWutZENN6EeSU_WMq0-BV-cub7osXRXruitk'
+SPOTIFY_ACCESS_TOKEN = 'BQDDJXH7IqyATXrGm8HptslQ38KkaB6mmsPYgbjIjM_-LWFSDiKYr09yMYK6rZebcSqWH7PXk9CAPOsn_4ME21Cr4XWcimVNUrUFWd__ZtGYniAiTEzyjPRONeSsuTKsIcCFR2DoCF2eR7ROwmJ5x8O10berKLM'
 
 
-def get_current_track_info(access_token=SPOTIFY_ACCESS_TOKEN):
+def get_current_track_info(access_token=SPOTIFY_ACCESS_TOKEN, debug=False):
     response = requests.get(
         SPOTIFY_GET_CURRENT_TRACK_URL,
         headers={
@@ -33,15 +33,11 @@ def get_current_track_info(access_token=SPOTIFY_ACCESS_TOKEN):
         }
     except:
         current_track_info = {
-            "track": 'n/a',
-            "artists": 'n/a',
-            "duration":  'n/a',
-            "progress":  'n/a',
-            "percentage_complete": 'n/a'
+            "track": ' ',
+            "artists": ' ',
+            "duration":  '00:00',
+            "progress":  '00:00',
+            "percentage_complete": '00:00/00:00'
         }
-
+    if debug: print(current_track_info)
     return current_track_info
-
-
-track_info = get_current_track_info()
-print(track_info)

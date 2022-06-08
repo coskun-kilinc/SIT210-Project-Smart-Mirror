@@ -1,4 +1,5 @@
 from __future__ import print_function
+from asyncio import events
 
 import datetime
 import os.path
@@ -13,7 +14,7 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 
-def get_calendar_events():
+def get_calendar_events(num_events=10, debug=False):
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -40,9 +41,9 @@ def get_calendar_events():
 
         # Call the Calendar API
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-        print('Getting the upcoming 10 events')
+        if debug: print(f'Getting the upcoming {num_events} events')
         events_result = service.events().list(calendarId='primary', timeMin=now,
-                                              maxResults=10, singleEvents=True,
+                                              maxResults=num_events, singleEvents=True,
                                               orderBy='startTime').execute()
         events = events_result.get('items', [])
 
@@ -51,10 +52,13 @@ def get_calendar_events():
             return
 
         # Prints the start and name of the next 10 events
-        for event in events:
-            start = event['start'].get('dateTime', event['start'].get('date'))
-            print(start, event['summary'])
+        if debug:
+            for event in events:
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                print(start, event['summary'])
 
     except HttpError as error:
         print('An error occurred: %s' % error)
     return events
+
+my_events = get_calendar_events() 

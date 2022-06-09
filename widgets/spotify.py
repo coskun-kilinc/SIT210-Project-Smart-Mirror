@@ -15,7 +15,7 @@ SPOTIPY_CLIENT_ID = 'e29d40e8d4124cfc8deaaf2e49fe60af'
 SPOTIPY_CLIENT_SECRET = '82021a98453448feb364930b425fd37e'
 SPOTIPY_REDIRECT_URI = 'http://localhost:5000/'
 
-DEBUG = False
+DEBUG = True
 
 class SpotifyClient(object):
     def __init__(self):   
@@ -41,8 +41,7 @@ class SpotifyClient(object):
                 "duration":  datetime.datetime.strptime(duration, '%H:%M:%S').strftime('%M:%S'),
                 "progress":  datetime.datetime.strptime(progress, '%H:%M:%S').strftime('%M:%S'),
                 "image": resp_json['item']['album']['images'][1]
-            }
-            if DEBUG: print(current_track_info['image']['url']) 
+            }            
         else:
             current_track_info = {
                 "track": '',
@@ -51,6 +50,7 @@ class SpotifyClient(object):
                 "progress":  '00:00',
                 "image": None
             }
+        if DEBUG: print(current_track_info) 
         return current_track_info
 
 

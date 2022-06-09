@@ -8,6 +8,7 @@ from PIL import ImageTk, Image
 from io import BytesIO
 
 CALENDAR_EVENTS = 10
+TRACK_TEXT_LENGTH = 20
 
 class SmartMirror:
     def __init__(self, master):
@@ -281,7 +282,7 @@ class SmartMirror:
             
         # call again after 200 ms
         self.spotify_art.config(image=self.spotify_album_art)
-        self.spotify_artist.after(200, self.refresh_spotify)
+        self.spotify_artist.after(1000, self.refresh_spotify)
      
 if __name__=="__main__":
     root = Tk()

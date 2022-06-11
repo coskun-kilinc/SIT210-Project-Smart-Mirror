@@ -14,7 +14,12 @@ IDENTITY_CHECK_INTERVAL = 60 # time between checking identity in seconds, increa
 BASE_TEXT_SIZE= 4
 
 class SmartMirror:
-    def __init__(self, master, user: str, identifier: facial_recognition.AbstractIdentifier, player_client: player.AbstractPlayerInterface):
+    def __init__(self, 
+                 master, 
+                 user: str, 
+                 identifier: facial_recognition.AbstractIdentifier, 
+                 player_client: player.AbstractPlayerInterface,
+                 weather_interface: weather.AbstractWeatherInterface):
         self.master = master
 
         # set title, and make fullscreen with a black background which will not show through the mirror
@@ -27,7 +32,8 @@ class SmartMirror:
         self.user = user
         # set up indentifier (Dummy or real facial recognition)
         self.identifier = identifier
-
+        # Weather Widget Interface, can be swapped out with different implementations i.e. for testing purposes or to change to a web based rather than local reading
+        self.weather_interface = weather_interface
         # player client i.e. Spotify or dummy interface
         self.player_client = player_client
        
@@ -173,9 +179,10 @@ class SmartMirror:
     Initialise greeting widget
     '''
     def init_greeting(self):        
+        # create greeter interface
         self.greeter = facial_recognition.GeneralGreeting()
 
-        # Weather Readings
+        # create widget
         self.greeting = Label(self.master,
                                  font = ('Bebas Neue', BASE_TEXT_SIZE*9),
                                  bg='black',
@@ -211,10 +218,7 @@ class SmartMirror:
     '''
     Creates weather widget
     '''
-    def init_weather(self):
-        # Weather Widget Interface, can be swapped out with different implementations i.e. for testing purposes or to change to a web based rather than local reading
-        self.weather_interface = weather.DummyWeather()
-
+    def init_weather(self):    
         # Weather Readings
         self.weather_widget = Label(self.master,
                                  font = ('Bebas Neue', BASE_TEXT_SIZE*3),
@@ -234,7 +238,7 @@ class SmartMirror:
         humidity = self.weather_interface.get_humidity()
         heat_index = self.weather_interface.calculate_heat_index(temperature=temperature, humidity=humidity, is_farenheit=False)
         # format and display information
-        self.weather_widget.config(text=f"Temperature: \t{round(temperature)}°c\nHumidity: \t{round(humidity)*100}%\nHeat Index: \t {round(heat_index)}")
+        self.weather_widget.config(text=f"Temperature: \t{round(temperature)}°c\nHumidity: \t{round(humidity)}%\nHeat Index: \t {round(heat_index)}")
         # update temperature every 15 minutes (controlled by the WEATHER_INTERVAL constant)
         self.weather_widget.after(WEATHER_INTERVAL*1000, self.refresh_weather)
   
@@ -397,5 +401,10 @@ if __name__=="__main__":
     user = "Josh"
     identifier = facial_recognition.DummyFacialRecognition(user)
     player_client = player.DummyMusicClient()
-    smart_gui = SmartMirror(root, user=user, identifier=identifier, player_client=player_client)
+    weather_interface = weather.ThingSpeakWeather()
+    smart_gui = SmartMirror(root, 
+                            user=user,
+                            identifier=identifier,
+                            player_client=player_client,
+                            weather_interface=weather_interface)
     root.mainloop() 

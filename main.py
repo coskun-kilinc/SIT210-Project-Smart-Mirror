@@ -1,7 +1,7 @@
 import datetime
 import time
 import requests
-from widgets import player, google_calendar, weather, facial_recognition
+from widgets import player, google_calendar, weather, identity
 from tkinter import Label, Tk
 from PIL import ImageTk, Image
 from io import BytesIO
@@ -17,7 +17,7 @@ class SmartMirror:
     def __init__(self, 
                  master, 
                  user: str, 
-                 identifier: facial_recognition.AbstractIdentifier, 
+                 identifier: identity.AbstractIdentifier, 
                  player_client: player.AbstractPlayerInterface,
                  weather_interface: weather.AbstractWeatherInterface):
         self.master = master
@@ -180,7 +180,7 @@ class SmartMirror:
     '''
     def init_greeting(self):        
         # create greeter interface
-        self.greeter = facial_recognition.GeneralGreeting()
+        self.greeter = identity.GeneralGreeting()
 
         # create widget
         self.greeting = Label(self.master,
@@ -399,7 +399,7 @@ class SmartMirror:
 if __name__=="__main__":
     root = Tk()
     user = "Josh"
-    identifier = facial_recognition.DummyFacialRecognition(user)
+    identifier = identity.DummyFacialRecognition(user)
     player_client = player.DummyMusicClient()
     weather_interface = weather.ThingSpeakWeather()
     smart_gui = SmartMirror(root, 

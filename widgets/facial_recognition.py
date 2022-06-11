@@ -22,7 +22,7 @@ class DummyFacialRecognition(AbstractIdentifier):
 
     def get_identity(self) -> str:
         check = random.random()
-        if check < 0.5:
+        if check < 0.1:
             return "unknown"
         else:
             return self.identity 

@@ -8,7 +8,7 @@ from io import BytesIO
 
 CALENDAR_EVENTS = 10    # number of calendar events to display
 WEATHER_INTERVAL = 900  # time between refreshing the weather widget in seconds
-IDENTITY_CHECK_INTERVAL = 30 # time between checking identity in seconds, increase to reduce overhead from facial recognition
+IDENTITY_CHECK_INTERVAL = 60 # time between checking identity in seconds, increase to reduce overhead from facial recognition
 
 # sets the base text size
 BASE_TEXT_SIZE= 4
@@ -66,28 +66,29 @@ class SmartMirror:
     ######################
 
     def grid_setup(self):
+        padx = 50
+        pady = 75
         self.top_left = Label(self.master, bg='black', width=30)
-        self.top_left.grid(row=0,column=0, sticky = "NW", padx=(10,10))
-
-        self.middle_middle = Label(self.master, bg='black', width=30)
-        self.middle_middle.grid(row=1,column=1, sticky = "N", padx=(10,10))
+        self.top_left.grid(row=0,column=0, sticky = "NW", padx=(padx,0), pady=(pady,0))
 
         self.top_right = Label(self.master, bg='black', width=30)
-        self.top_right.grid(row=0,column=2, sticky = "NE", padx=(10,10))
+        self.top_right.grid(row=0,column=1, sticky = "NE", padx=(0,padx), pady=(pady,0))
 
+        self.middle_middle = Label(self.master, bg='black', width=30)
+        self.middle_middle.grid(row=1,column=0, sticky = "N",columnspan=2)
+        
         self.bottom_left = Label(self.master, bg='black', width=30)
-        self.bottom_left.grid(row=2,column=0, sticky = "SW", padx=(10,10))
+        self.bottom_left.grid(row=2,column=0, sticky = "SW", padx=(padx,0), pady=(0,pady))
 
         self.bottom_right = Label(self.master, bg='black', width=30)
-        self.bottom_right.grid(row=2,column=2, sticky = "SE", padx=(10,10))
+        self.bottom_right.grid(row=2,column=1, sticky = "SE", padx=(0,padx), pady=(0,pady+50))
 
         self.master.grid_columnconfigure(0, weight=1)
         self.master.grid_columnconfigure(1, weight=1)
-        self.master.grid_columnconfigure(2, weight=1)  
 
         self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_rowconfigure(1, weight=2)
-        self.master.grid_rowconfigure(2, weight=2)
+        self.master.grid_rowconfigure(1, weight=1)
+        self.master.grid_rowconfigure(2, weight=1)
 
     ######################
     ##      Clock       ##
@@ -182,7 +183,7 @@ class SmartMirror:
         self.greeting.grid(in_=self.middle_middle,
                             row =0,
                             column = 0,
-                            sticky="N")
+                            columnspan = 3)
 
 
     def refresh_greeting(self):
@@ -199,7 +200,7 @@ class SmartMirror:
             # hide google calendar
             authorised = False
         self.update_google_calendar(authorised=authorised)
-        self.greeting.after(IDENTITY_CHECK_INTERVAL * 100, self.refresh_greeting)
+        self.greeting.after(IDENTITY_CHECK_INTERVAL * 1000, self.refresh_greeting)
          
 
     
@@ -248,23 +249,28 @@ class SmartMirror:
         # weather widget is paired to clock widget
 
         self.google_calendar = Label(self.master, text='Google Calendar',
-                                     font = ('Bebas Neue', BASE_TEXT_SIZE*4),
+                                     font = ('Bebas Neue', BASE_TEXT_SIZE*5),
                                      bg='black',
                                      fg='white')
         self.google_calendar.grid(in_=self.bottom_right,
                                   row =0,
                                   column = 1,
+                                  columnspan = 1,
                                   sticky="NE") 
         self.calendar_events = []
         self.calendar_widgets = []
         for i in range(CALENDAR_EVENTS):
-            self.calendar_events.append("")
+            self.calendar_events.append(" ")
             self.calendar_widgets.append(Label(self.master,
                                         text=self.calendar_events[i],
-                                        font = ('Bebas Neue', BASE_TEXT_SIZE*2),
+                                        font = ('Bebas Neue', BASE_TEXT_SIZE*3),
                                         bg='black',
                                         fg='white'))
-            self.calendar_widgets[i].grid(in_=self.bottom_right, row =1+i, column = 1, sticky="NE") 
+            self.calendar_widgets[i].grid(in_=self.bottom_right,
+                                          row =1+i,
+                                          column = 1,
+                                          columnspan = 1,
+                                          sticky="NE") 
         
     '''
     Refresh Google Calendar data
@@ -288,7 +294,7 @@ class SmartMirror:
                 self.calendar_widgets[i].config(text=self.calendar_events[i])
         else:
             for i in range(CALENDAR_EVENTS):
-                self.calendar_widgets[i].config(text="")
+                self.calendar_widgets[i].config(text=" ")
 
         
     ######################
@@ -306,9 +312,9 @@ class SmartMirror:
                                     fg='white')
         self.spotify_artist.grid(in_=self.bottom_left,
                                  row=0,
-                                 column=1,
+                                 column=0,
                                  rowspan=1,
-                                 columnspan = 3,
+                                 columnspan = 2,
                                  sticky="N")
 
         # Currently Playing Album Art
@@ -320,9 +326,9 @@ class SmartMirror:
                                 image=self.img, border=0)
         self.spotify_art.grid(in_=self.bottom_left,
                               row=1,
-                              column=1,
+                              column=0,
                               rowspan=1,
-                              columnspan = 3,
+                              columnspan = 1,
                               sticky="S")
 
         # Currently Playing Song Title
@@ -332,7 +338,7 @@ class SmartMirror:
                                    fg='white')
         self.spotify_track.grid(in_=self.bottom_left,
                                 row=3,
-                                column=3,
+                                column=0,
                                 columnspan = 1,
                                 sticky="N")
 
@@ -343,7 +349,7 @@ class SmartMirror:
                                         fg='white')
         self.spotify_track_time.grid(in_=self.bottom_left,
                                      row=4,
-                                     column=3,
+                                     column=0,
                                      columnspan = 1,
                                      sticky="S")
 
@@ -390,6 +396,6 @@ if __name__=="__main__":
     root = Tk()
     user = "Josh"
     identifier = facial_recognition.DummyFacialRecognition(user)
-    player_client = player.SpotifyClient()
+    player_client = player.DummyMusicClient()
     smart_gui = SmartMirror(root, user=user, identifier=identifier, player_client=player_client)
     root.mainloop() 

@@ -10,6 +10,9 @@ CALENDAR_EVENTS = 10    # number of calendar events to display
 WEATHER_INTERVAL = 900  # time between refreshing the weather widget in seconds
 IDENTITY_CHECK_INTERVAL = 30 # time between checking identity in seconds, increase to reduce overhead from facial recognition
 
+# sets the base text size
+BASE_TEXT_SIZE= 4
+
 class SmartMirror:
     def __init__(self, master, user: str, identifier: facial_recognition.AbstractIdentifier, player_client: player.AbstractPlayerInterface):
         self.master = master
@@ -95,7 +98,7 @@ class SmartMirror:
     '''
     def init_system_clock(self):
         self.clock_hour = Label(self.master,
-                                font = ('Bebas Neue', 125),
+                                font = ('Bebas Neue', BASE_TEXT_SIZE*16),
                                 bg='black',
                                 fg='white')
         self.clock_hour.grid(in_=self.top_left,
@@ -105,7 +108,7 @@ class SmartMirror:
                                 sticky="W")
 
         self.clock_min_sec = Label(self.master,
-                                   font = ('Bebas Neue', 50),
+                                   font = ('Bebas Neue', BASE_TEXT_SIZE*6),
                                    bg='black',
                                    fg='white')
         self.clock_min_sec.grid(in_=self.top_left,
@@ -115,7 +118,7 @@ class SmartMirror:
                                 sticky="W")
 
         self.date_frame = Label(self.master,
-                                font = ('Bebas Neue', 25),
+                                font = ('Bebas Neue', BASE_TEXT_SIZE*3),
                                 bg='black',
                                 fg='white')
         self.date_frame.grid(in_=self.top_left,
@@ -173,7 +176,7 @@ class SmartMirror:
 
         # Weather Readings
         self.greeting = Label(self.master,
-                                 font = ('Bebas Neue', 72),
+                                 font = ('Bebas Neue', BASE_TEXT_SIZE*9),
                                  bg='black',
                                  fg='white')
         self.greeting.grid(in_=self.top_middle,
@@ -213,7 +216,7 @@ class SmartMirror:
 
         # Weather Readings
         self.weather_widget = Label(self.master,
-                                 font = ('Bebas Neue', 24),
+                                 font = ('Bebas Neue', BASE_TEXT_SIZE*3),
                                  bg='black',
                                  fg='white',
                                  justify='left')
@@ -245,7 +248,7 @@ class SmartMirror:
         # weather widget is paired to clock widget
 
         self.google_calendar = Label(self.master, text='Google Calendar',
-                                     font = ('Bebas Neue', 32),
+                                     font = ('Bebas Neue', BASE_TEXT_SIZE*4),
                                      bg='black',
                                      fg='white')
         self.google_calendar.grid(in_=self.bottom_right,
@@ -258,7 +261,7 @@ class SmartMirror:
             self.calendar_events.append("")
             self.calendar_widgets.append(Label(self.master,
                                         text=self.calendar_events[i],
-                                        font = ('Bebas Neue', 16),
+                                        font = ('Bebas Neue', BASE_TEXT_SIZE*2),
                                         bg='black',
                                         fg='white'))
             self.calendar_widgets[i].grid(in_=self.bottom_right, row =1+i, column = 1, sticky="NE") 
@@ -298,7 +301,7 @@ class SmartMirror:
     def init_spotify_widget(self):
         # Currently Playing Arist
         self.spotify_artist = Label(self.master,
-                                    font = ('consolas', 30),
+                                    font = ('consolas', BASE_TEXT_SIZE*3),
                                     bg='black',
                                     fg='white')
         self.spotify_artist.grid(in_=self.bottom_left,
@@ -321,7 +324,7 @@ class SmartMirror:
 
         # Currently Playing Song Title
         self.spotify_track = Label(self.master,
-                                   font = ('consolas', 30),
+                                   font = ('consolas', BASE_TEXT_SIZE*3),
                                    bg='black',
                                    fg='white')
         self.spotify_track.grid(in_=self.bottom_left,
@@ -332,7 +335,7 @@ class SmartMirror:
 
         # Currently Playing Progress
         self.spotify_track_time = Label(self.master,
-                                        font = ('consolas', 25),
+                                        font = ('consolas', BASE_TEXT_SIZE*3),
                                         bg='black',
                                         fg='white')
         self.spotify_track_time.grid(in_=self.bottom_left,

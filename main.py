@@ -8,7 +8,7 @@ from io import BytesIO
 
 CALENDAR_EVENTS = 10    # number of calendar events to display
 WEATHER_INTERVAL = 900  # time between refreshing the weather widget in seconds
-IDENTITY_CHECK_INTERVAL = 60 # time between checking identity in seconds, increase to reduce overhead from facial recognition
+IDENTITY_CHECK_INTERVAL = 15 # time between checking identity in seconds, increase to reduce overhead from facial recognition
 
 # sets the base text size
 BASE_TEXT_SIZE= 4
@@ -298,7 +298,7 @@ class SmartMirror:
                 self.calendar_widgets[i].config(text=self.calendar_events[i])
         else:
             for i in range(CALENDAR_EVENTS):
-                self.calendar_widgets[i].config(text=" ")
+                self.calendar_widgets[i].config(text="information hidden")
 
         
     ######################
@@ -399,7 +399,7 @@ class SmartMirror:
 if __name__=="__main__":
     root = Tk()
     user = "Josh"
-    identifier = identity.DummyFacialRecognition(user)
+    identifier = identity.FacialRecognition(user)
     player_client = player.DummyMusicClient()
     weather_interface = weather.ThingSpeakWeather()
     smart_gui = SmartMirror(root, 

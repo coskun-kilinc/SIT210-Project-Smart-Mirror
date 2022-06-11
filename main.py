@@ -69,8 +69,8 @@ class SmartMirror:
         self.top_left = Label(self.master, bg='black', width=30)
         self.top_left.grid(row=0,column=0, sticky = "NW", padx=(10,10))
 
-        self.top_middle = Label(self.master, bg='black', width=30)
-        self.top_middle.grid(row=0,column=1, sticky = "N", padx=(10,10))
+        self.middle_middle = Label(self.master, bg='black', width=30)
+        self.middle_middle.grid(row=1,column=1, sticky = "N", padx=(10,10))
 
         self.top_right = Label(self.master, bg='black', width=30)
         self.top_right.grid(row=0,column=2, sticky = "NE", padx=(10,10))
@@ -179,7 +179,7 @@ class SmartMirror:
                                  font = ('Bebas Neue', BASE_TEXT_SIZE*9),
                                  bg='black',
                                  fg='white')
-        self.greeting.grid(in_=self.top_middle,
+        self.greeting.grid(in_=self.middle_middle,
                             row =0,
                             column = 0,
                             sticky="N")

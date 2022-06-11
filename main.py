@@ -2,13 +2,14 @@ import os
 import datetime
 import time
 import requests
-from widgets import spotify, google_calendar
-from tkinter import Button, Entry, Frame, Label, Tk, scrolledtext, constants
+from widgets import player, google_calendar, weather
+from tkinter import Label, Tk
 from PIL import ImageTk, Image
 from io import BytesIO
+import threading
 
-CALENDAR_EVENTS = 10
-TRACK_TEXT_LENGTH = 20
+CALENDAR_EVENTS = 10    # number of calendar events to display
+WEATHER_INTERVAL = 900  # time between refreshing the weather widget
 
 class SmartMirror:
     def __init__(self, master):
@@ -19,8 +20,7 @@ class SmartMirror:
         self.master.attributes("-fullscreen", True)
         self.master.configure(background='black')
         self.master.bind("<Escape>", lambda event:self.close())
-
-        self.img = ImageTk.PhotoImage(Image.open('images\default_album_art.png'))
+       
         self.setup()
         
     def close(self):
@@ -36,33 +36,76 @@ class SmartMirror:
         self.init_system_clock()
         self.init_spotify_widget()
         self.init_google_calendar()
+        self.init_weather()
         self.refresh()
 
     def refresh(self):
         self.get_system_time()
         self.refresh_spotify()
         self.refresh_google_calendar()
+        self.refresh_weather()
         
     def grid_setup(self):
         self.top_left = Label(self.master, bg='black', width=30)
         self.top_left.grid(row=0,column=0, sticky = "NW", padx=(10,10))
 
-        self.bottom_left = Label(self.master, bg='black', width=30)
-        self.bottom_left.grid(row=2,column=0, sticky = "W", padx=(10,10))
+        self.top_middle = Label(self.master, bg='black', width=30)
+        self.top_middle.grid(row=0,column=0, sticky = "N", padx=(10,10))
 
-        self.middle_right = Label(self.master, bg='black', width=30)
-        self.middle_right.grid(row=1,column=2, sticky = "E", padx=(10,10))
+        self.top_right = Label(self.master, bg='black', width=30)
+        self.top_right.grid(row=0,column=2, sticky = "NE", padx=(10,10))
+
+        self.bottom_left = Label(self.master, bg='black', width=30)
+        self.bottom_left.grid(row=2,column=0, sticky = "SW", padx=(10,10))
+
+        self.bottom_right = Label(self.master, bg='black', width=30)
+        self.bottom_right.grid(row=2,column=2, sticky = "SE", padx=(10,10))
 
         self.master.grid_columnconfigure(0, weight=1)
         self.master.grid_columnconfigure(1, weight=1)
         self.master.grid_columnconfigure(2, weight=1)  
 
         self.master.grid_rowconfigure(0, weight=1)
-        self.master.grid_rowconfigure(1, weight=1)
-        self.master.grid_rowconfigure(2, weight=1)
+        self.master.grid_rowconfigure(1, weight=2)
+        self.master.grid_rowconfigure(2, weight=2)
 
-        self.top_left.grid_propagate(True)
-        self.bottom_left.grid_propagate(True)
+    ######################
+    ##      Clock       ##
+    ######################
+
+    '''
+    Creates the date and time widget
+    '''
+    def init_system_clock(self):
+        self.clock_hour = Label(self.master,
+                                font = ('Bebas Neue', 125),
+                                bg='black',
+                                fg='white')
+        self.clock_hour.grid(in_=self.top_left,
+                                row=0,
+                                column=0,
+                                rowspan = 2,
+                                sticky="W")
+
+        self.clock_min_sec = Label(self.master,
+                                   font = ('Bebas Neue', 50),
+                                   bg='black',
+                                   fg='white')
+        self.clock_min_sec.grid(in_=self.top_left,
+                                row=0,
+                                column=1,
+                                columnspan = 3,
+                                sticky="W")
+
+        self.date_frame = Label(self.master,
+                                font = ('Bebas Neue', 25),
+                                bg='black',
+                                fg='white')
+        self.date_frame.grid(in_=self.top_left,
+                                row=0,
+                                column=1,
+                                columnspan = 3,
+                                sticky="S")
 
     '''
     Just calls the initial calls for the functions to update the time
@@ -100,61 +143,46 @@ class SmartMirror:
     def system_date(self):
         system_date = datetime.date.today()
         self.date_frame.config(text=system_date.strftime("%A %d, %B %Y"))
+            
+    ######################
+    ##     Greeting     ##
+    ######################
 
-    '''
-    Creates the date and time widget
-    '''
-    def init_system_clock(self):
-        self.clock_hour = Label(self.master,
-                                font = ('Bebas Neue', 125),
-                                bg='black',
-                                fg='white')
-        self.clock_hour.grid(in_=self.top_left,
-                                row=0,
-                                column=0,
-                                rowspan = 2,
-                                sticky="W")
 
-        self.clock_min_sec = Label(self.master,
-                                   font = ('Bebas Neue', 50),
-                                   bg='black',
-                                   fg='white')
-        self.clock_min_sec.grid(in_=self.top_left,
-                                row=0,
-                                column=1,
-                                columnspan = 3,
-                                sticky="W")
 
-        self.date_frame = Label(self.master,
-                                font = ('Bebas Neue', 25),
-                                bg='black',
-                                fg='white')
-        self.date_frame.grid(in_=self.top_left,
-                                row=0,
-                                column=1,
-                                columnspan = 3,
-                                sticky="S")
-             
+    ######################
+    ##      Weather     ##
+    ######################
+    
     '''
     Creates weather widget
     '''
-    def init_web_weather(self):
-        # weather widget is paired to clock widget
+    def init_weather(self):
+        # Weather Widget Interface, can be swapped out with different implementations i.e. for testing purposes or to change to a web based rather than local reading
+        self.weather_interface = weather.DummyWeather()
 
-        #self.web_temp = Label(image=my_image, )
-        #self.web_temp.image = my_image
-        self.web_temp.grid(in_=self.TL,
-                            row =2,
-                            column = 1,
-                            sticky="NE")
-        self.web_weather = Label(self.master,
-                                 font = ('Bebas Neue',15, 'bold'),
+        # Weather Readings
+        self.weather_widget = Label(self.master,
+                                 font = ('Bebas Neue', 24),
                                  bg='black',
-                                 fg='white')
-        self.web_temp.grid(in_=self.TL,
-                            row =2,
-                            column = 2,
-                            sticky="NW") 
+                                 fg='white',
+                                 justify='left')
+        self.weather_widget.grid(in_=self.top_right,
+                            row =0,
+                            column = 3,
+                            sticky="NE",
+                            rowspan = 3)
+
+
+    def refresh_weather(self):
+        # get weather information from weather object
+        temperature = self.weather_interface.get_temperature()
+        humidity = self.weather_interface.get_humidity()
+        heat_index = self.weather_interface.calculate_heat_index(temperature=temperature, humidity=humidity, is_farenheit=False)
+        # format and display information
+        self.weather_widget.config(text=f"Temperature: \t{round(temperature)}°c\nHumidity: \t{round(humidity)*100}%\nHeat Index: \t {round(heat_index)}")
+        # update temperature every 15 minutes (controlled by the WEATHER_INTERVAL constant)
+        self.weather_widget.after(WEATHER_INTERVAL*1000, self.refresh_weather)
   
     ######################
     ##  Google Calendar ##
@@ -172,7 +200,7 @@ class SmartMirror:
                                      font = ('Bebas Neue', 32),
                                      bg='black',
                                      fg='white')
-        self.google_calendar.grid(in_=self.middle_right,
+        self.google_calendar.grid(in_=self.bottom_right,
                                   row =0,
                                   column = 1,
                                   sticky="NE") 
@@ -183,7 +211,7 @@ class SmartMirror:
                                         font = ('Bebas Neue', 16),
                                         bg='black',
                                         fg='white'))
-            self.calendar_events[i].grid(in_=self.middle_right, row =1+i, column = 1, sticky="NE") 
+            self.calendar_events[i].grid(in_=self.bottom_right, row =1+i, column = 1, sticky="NE") 
 
     '''
     Refresh Google Calendar data and update widget
@@ -196,18 +224,20 @@ class SmartMirror:
             event_text = f"{start}: {event['summary']}" 
             self.calendar_events[i].config(text=event_text)
             i += 1
-        self.calendar_events[0].after(1000, self.refresh_google_calendar)
+        self.calendar_events[0].after(10000, self.refresh_google_calendar)
         
     ######################
     ##      Spotify     ##
     ######################
 
-
     '''
     generates cells for the spotify widget
     '''
     def init_spotify_widget(self):
-        self.spotify_client = spotify.SpotifyClient()
+        # generate spotify client
+        self.spotify_client = player.DummyMusicClient()
+
+        # Currently Playing Arist
         self.spotify_artist = Label(self.master,
                                     font = ('consolas', 30),
                                     bg='black',
@@ -219,7 +249,8 @@ class SmartMirror:
                                  columnspan = 3,
                                  sticky="N")
 
-        # space for loading album art, currently WIP
+        # Currently Playing Album Art
+        self.img = ImageTk.PhotoImage(Image.open('images\default_album_art.png'))
         self.spotify_art= Label(self.master,
                                 image=self.img, border=0)
         self.spotify_art.grid(in_=self.bottom_left,
@@ -229,6 +260,7 @@ class SmartMirror:
                               columnspan = 3,
                               sticky="S")
 
+        # Currently Playing Song Title
         self.spotify_track = Label(self.master,
                                    font = ('consolas', 30),
                                    bg='black',
@@ -239,6 +271,7 @@ class SmartMirror:
                                 columnspan = 1,
                                 sticky="N")
 
+        # Currently Playing Progress
         self.spotify_track_time = Label(self.master,
                                         font = ('consolas', 25),
                                         bg='black',
@@ -248,7 +281,6 @@ class SmartMirror:
                                      column=3,
                                      columnspan = 1,
                                      sticky="S")
-
 
     '''
     Refresh spotify data and update widget
@@ -282,8 +314,13 @@ class SmartMirror:
             
         # call again after 200 ms
         self.spotify_art.config(image=self.spotify_album_art)
-        self.spotify_artist.after(1000, self.refresh_spotify)
-     
+        self.spotify_artist.after(200, self.refresh_spotify)
+
+
+######################
+##       Main       ##
+######################
+
 if __name__=="__main__":
     root = Tk()
     smart_gui = SmartMirror(root)

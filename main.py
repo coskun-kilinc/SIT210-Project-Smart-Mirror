@@ -312,7 +312,10 @@ class SmartMirror:
                                  sticky="N")
 
         # Currently Playing Album Art
-        self.img = ImageTk.PhotoImage(Image.open('images\default_album_art.png'))
+        try:
+            self.img = ImageTk.PhotoImage(Image.open('images/default_album_art.png'))
+        except:
+            self.img = ImageTk.PhotoImage(Image.open('images\default_album_art.png'))
         self.spotify_art= Label(self.master,
                                 image=self.img, border=0)
         self.spotify_art.grid(in_=self.bottom_left,

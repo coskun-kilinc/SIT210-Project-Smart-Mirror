@@ -1,18 +1,17 @@
-import os
 import datetime
 import time
 import requests
-from widgets import player, google_calendar, weather
+from widgets import player, google_calendar, weather, facial_recognition
 from tkinter import Label, Tk
 from PIL import ImageTk, Image
 from io import BytesIO
-import threading
 
 CALENDAR_EVENTS = 10    # number of calendar events to display
-WEATHER_INTERVAL = 900  # time between refreshing the weather widget
+WEATHER_INTERVAL = 900  # time between refreshing the weather widget in seconds
+IDENTITY_CHECK_INTERVAL = 30 # time between checking identity in seconds, increase to reduce overhead from facial recognition
 
 class SmartMirror:
-    def __init__(self, master):
+    def __init__(self, master, user: str, identifier: facial_recognition.AbstractIdentifier, player_client: player.AbstractPlayerInterface):
         self.master = master
 
         # set title, and make fullscreen with a black background which will not show through the mirror
@@ -20,6 +19,14 @@ class SmartMirror:
         self.master.attributes("-fullscreen", True)
         self.master.configure(background='black')
         self.master.bind("<Escape>", lambda event:self.close())
+
+        # set user
+        self.user = user
+        # set up indentifier (Dummy or real facial recognition)
+        self.identifier = identifier
+
+        # player client i.e. Spotify or dummy interface
+        self.player_client = player_client
        
         self.setup()
         
@@ -31,12 +38,17 @@ class SmartMirror:
     '''
     Performs basic setup of interface, initiating grid, creating widgets and starting refresh cycle
     '''
+    ######################
+    ##       Setup      ##
+    ######################
+
     def setup(self):
         self.grid_setup()
         self.init_system_clock()
         self.init_spotify_widget()
         self.init_google_calendar()
         self.init_weather()
+        self.init_greeting()
         self.refresh()
 
     def refresh(self):
@@ -44,13 +56,18 @@ class SmartMirror:
         self.refresh_spotify()
         self.refresh_google_calendar()
         self.refresh_weather()
+        self.refresh_greeting()
         
+    ######################
+    ##       Grid       ##
+    ######################
+
     def grid_setup(self):
         self.top_left = Label(self.master, bg='black', width=30)
         self.top_left.grid(row=0,column=0, sticky = "NW", padx=(10,10))
 
         self.top_middle = Label(self.master, bg='black', width=30)
-        self.top_middle.grid(row=0,column=0, sticky = "N", padx=(10,10))
+        self.top_middle.grid(row=0,column=1, sticky = "N", padx=(10,10))
 
         self.top_right = Label(self.master, bg='black', width=30)
         self.top_right.grid(row=0,column=2, sticky = "NE", padx=(10,10))
@@ -148,8 +165,41 @@ class SmartMirror:
     ##     Greeting     ##
     ######################
 
+    '''
+    Initialise greeting widget
+    '''
+    def init_greeting(self):        
+        self.greeter = facial_recognition.GeneralGreeting()
+
+        # Weather Readings
+        self.greeting = Label(self.master,
+                                 font = ('Bebas Neue', 72),
+                                 bg='black',
+                                 fg='white')
+        self.greeting.grid(in_=self.top_middle,
+                            row =0,
+                            column = 0,
+                            sticky="N")
 
 
+    def refresh_greeting(self):
+        # get user identity
+        identity = self.identifier.get_identity()
+        # if identified person is intended user, greet them
+        if identity == self.user:
+            self.greeting.config(text=self.greeter.greeting(identity))
+            # reveal calendar
+            authorised = True
+        else:
+            # otherwise hide calendar information
+            self.greeting.config(text="Unknown User\nSensitive Information Hidden")
+            # hide google calendar
+            authorised = False
+        self.update_google_calendar(authorised=authorised)
+        self.greeting.after(IDENTITY_CHECK_INTERVAL * 100, self.refresh_greeting)
+         
+
+    
     ######################
     ##      Weather     ##
     ######################
@@ -194,8 +244,6 @@ class SmartMirror:
     def init_google_calendar(self):
         # weather widget is paired to clock widget
 
-        #self.web_temp = Label(image=my_image, )
-        #self.web_temp.image = my_image
         self.google_calendar = Label(self.master, text='Google Calendar',
                                      font = ('Bebas Neue', 32),
                                      bg='black',
@@ -205,16 +253,18 @@ class SmartMirror:
                                   column = 1,
                                   sticky="NE") 
         self.calendar_events = []
+        self.calendar_widgets = []
         for i in range(CALENDAR_EVENTS):
-            self.calendar_events.append(Label(self.master,
-                                        text=f'No Event',
+            self.calendar_events.append("")
+            self.calendar_widgets.append(Label(self.master,
+                                        text=self.calendar_events[i],
                                         font = ('Bebas Neue', 16),
                                         bg='black',
                                         fg='white'))
-            self.calendar_events[i].grid(in_=self.bottom_right, row =1+i, column = 1, sticky="NE") 
-
+            self.calendar_widgets[i].grid(in_=self.bottom_right, row =1+i, column = 1, sticky="NE") 
+        
     '''
-    Refresh Google Calendar data and update widget
+    Refresh Google Calendar data
     '''
     def refresh_google_calendar(self):
         events = google_calendar.get_calendar_events(num_events=CALENDAR_EVENTS)
@@ -222,9 +272,21 @@ class SmartMirror:
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             event_text = f"{start}: {event['summary']}" 
-            self.calendar_events[i].config(text=event_text)
+            self.calendar_events[i] = event_text
             i += 1
-        self.calendar_events[0].after(10000, self.refresh_google_calendar)
+        self.calendar_widgets[0].after(10000, self.refresh_google_calendar)
+
+    '''
+    Update Google Calendar Widget
+    '''
+    def update_google_calendar(self, authorised: bool):
+        if authorised:
+            for i in range(CALENDAR_EVENTS):
+                self.calendar_widgets[i].config(text=self.calendar_events[i])
+        else:
+            for i in range(CALENDAR_EVENTS):
+                self.calendar_widgets[i].config(text="")
+
         
     ######################
     ##      Spotify     ##
@@ -234,9 +296,6 @@ class SmartMirror:
     generates cells for the spotify widget
     '''
     def init_spotify_widget(self):
-        # generate spotify client
-        self.spotify_client = player.DummyMusicClient()
-
         # Currently Playing Arist
         self.spotify_artist = Label(self.master,
                                     font = ('consolas', 30),
@@ -288,7 +347,7 @@ class SmartMirror:
     def refresh_spotify(self, current_track_info=''):
         # get new track info
 
-        next_track_info = self.spotify_client.get_current_track_info()
+        next_track_info = self.player_client.get_current_track_info()
         # convert track time into string from track info
         track_time = f"{next_track_info['progress']}/{next_track_info['duration']}"
         # check if track info has changed
@@ -323,5 +382,8 @@ class SmartMirror:
 
 if __name__=="__main__":
     root = Tk()
-    smart_gui = SmartMirror(root)
+    user = "Josh"
+    identifier = facial_recognition.DummyFacialRecognition(user)
+    player_client = player.SpotifyClient()
+    smart_gui = SmartMirror(root, user=user, identifier=identifier, player_client=player_client)
     root.mainloop() 

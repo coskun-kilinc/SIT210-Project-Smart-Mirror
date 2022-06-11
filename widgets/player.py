@@ -6,15 +6,20 @@ from spotipy.oauth2 import SpotifyOAuth
 
 DEBUG = False
 
-class GetCurrentTrack(ABC):
+'''
+Abstract Player interface
+'''
+class AbstractPlayerInterface(ABC):
+
     @abstractmethod
     def get_current_track_info(self, debug=False):
         raise NotImplementedError
 
+
 '''
 Dummy music client, provides static track information for testing
 '''
-class DummyMusicClient(GetCurrentTrack):
+class DummyMusicClient(AbstractPlayerInterface):
 
     # overrides interface get_current_track method
     def get_current_track_info(self, debug=False):
@@ -31,7 +36,7 @@ class DummyMusicClient(GetCurrentTrack):
 '''
 Spotify Client class, implements GetCurrentTrack interface
 '''
-class SpotifyClient(GetCurrentTrack):
+class SpotifyClient(AbstractPlayerInterface):
     # parameters necessary for creating a spotify client
     # SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET are stored as environment variables, you must provide your own
     SPOTIFY_GET_CURRENT_TRACK_URL = 'https://api.spotify.com/v1/me/player'
@@ -75,3 +80,7 @@ class SpotifyClient(GetCurrentTrack):
             }
         if DEBUG: print(current_track_info) 
         return current_track_info
+
+# testing
+# player_client = SpotifyClient()
+# print(player_client.get_current_track_info())

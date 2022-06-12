@@ -4,8 +4,8 @@ import os
 # READ_API_KEY=os.getenv('THINGSPEAK_READ_API_KEY')
 # CHANNEL_ID=os.getenv('THINGSPEAK_CHANNEL_ID')
 
-READ_API_KEY = 'KGSTD50TAHWXIQI8'
-CHANNEL_ID = 1765217
+READ_API_KEY = os.getenv('READ_API_KEY')
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 
 
 def read_feeds(feeds: int) -> list:

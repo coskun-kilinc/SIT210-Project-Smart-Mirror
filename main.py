@@ -1,3 +1,4 @@
+# import all the necessary packages
 import datetime
 import time
 import requests
@@ -61,7 +62,7 @@ class SmartMirror:
         self.refresh()
 
     def refresh(self):
-        self.get_system_time()
+        self.refresh_clock()
         self.refresh_spotify()
         self.refresh_google_calendar()
         self.refresh_weather()
@@ -74,6 +75,7 @@ class SmartMirror:
     def grid_setup(self):
         padx = 50
         pady = 75
+
         self.top_left = Label(self.master, bg='black', width=30)
         self.top_left.grid(row=0,column=0, sticky = "NW", padx=(padx,0), pady=(pady,0))
 
@@ -137,7 +139,7 @@ class SmartMirror:
     '''
     Just calls the initial calls for the functions to update the time
     '''
-    def get_system_time(self):
+    def refresh_clock(self):
         self.system_hour()
         self.system_min_sec()
         self.system_date()
@@ -170,6 +172,7 @@ class SmartMirror:
     def system_date(self):
         system_date = datetime.date.today()
         self.date_frame.config(text=system_date.strftime("%A %d, %B %Y"))
+        self.t.after(24*60*60*100, self.system_min_sec)
             
     ######################
     ##     Greeting     ##
@@ -400,7 +403,7 @@ if __name__=="__main__":
     root = Tk()
     user = "Josh"
     identifier = identity.FacialRecognition(user)
-    player_client = player.DummyMusicClient()
+    player_client = player.SpotifyClient()
     weather_interface = weather.ThingSpeakWeather()
     smart_gui = SmartMirror(root, 
                             user=user,
